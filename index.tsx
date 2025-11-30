@@ -1,10 +1,8 @@
 
 import React, { useState, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
-import { EVENTS, RECORDS, EventId, RecordType, TimerType } from './data';
+import { EVENTS, RECORDS, EventId, RecordType } from './data';
 import './styles.css';
-
-type ViewMode = 'leaderboard' | 'gr';
 
 // Helper to parse WCA result strings (e.g. "1:05.22", "3.13", "DNF") to a number for sorting
 const parseResult = (result: string): number => {
@@ -55,40 +53,17 @@ const formatTimeDisplay = (result: string): string => {
 };
 
 const App = () => {
-  const [view, setView] = useState<ViewMode>('leaderboard');
   const [activeEvent, setActiveEvent] = useState<EventId>('333');
   const [resultType, setResultType] = useState<RecordType>('single');
-  const [timerType, setTimerType] = useState<TimerType>('keyboard');
 
   // Filter for Leaderboard View and Sort dynamically by Result
   const leaderboardRecords = useMemo(() => {
     return RECORDS
-      .filter((r) => r.eventId === activeEvent && r.type === resultType && r.timerType === timerType)
+      .filter((r) => r.eventId === activeEvent && r.type === resultType)
       .sort((a, b) => parseResult(a.result) - parseResult(b.result));
-  }, [activeEvent, resultType, timerType]);
-
-  // Data for Group Records View (Calculate best result per event dynamically)
-  const groupRecords = useMemo(() => {
-    return EVENTS.map(evt => {
-      // Find all records for this config
-      const eventRecords = RECORDS.filter(
-        r => r.eventId === evt.id && r.type === resultType && r.timerType === timerType
-      );
-      
-      // Sort and pick the best (first)
-      const bestRecord = eventRecords.length > 0 
-        ? eventRecords.sort((a, b) => parseResult(a.result) - parseResult(b.result))[0]
-        : undefined;
-
-      return { event: evt, record: bestRecord };
-    });
-  }, [resultType, timerType]);
+  }, [activeEvent, resultType]);
 
   const activeEventName = EVENTS.find(e => e.id === activeEvent)?.name;
-
-  const toggleView = () => {
-    setView(prev => prev === 'leaderboard' ? 'gr' : 'leaderboard');
-  };
 
   const getResultTypeLabel = (type: RecordType) => {
     switch (type) {
@@ -101,15 +76,6 @@ const App = () => {
 
   return (
     <div className="container">
-      {/* View Switcher Button (Top Left) */}
-      <button 
-        className="view-switch-btn" 
-        onClick={toggleView}
-        aria-label="Toggle View"
-      >
-        {view === 'leaderboard' ? 'GR' : '榜'}
-      </button>
-
       {/* GitHub Link (Top Right) */}
       <a 
         href="https://github.com/huizhiLLL/Fish" 
@@ -124,27 +90,23 @@ const App = () => {
       </a>
 
       <header>
-        <h1>{view === 'leaderboard' ? "🐟️'s Leaderboard" : "🐟️'s Group Records"}</h1>
+        <h1>🐟️'s Leaderboard</h1>
         <div className="subtitle">Practice Best</div>
       </header>
 
-      {view === 'leaderboard' && (
-        <>
-          {/* Event Selection Tabs */}
-          <div className="tabs-container">
-            {EVENTS.map((evt) => (
-              <button
-                key={evt.id}
-                className={`tab-button ${activeEvent === evt.id ? 'active' : ''}`}
-                onClick={() => setActiveEvent(evt.id)}
-                aria-label={`Select event ${evt.name}`}
-              >
-                {evt.name}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
+      {/* Event Selection Tabs */}
+      <div className="tabs-container">
+        {EVENTS.map((evt) => (
+          <button
+            key={evt.id}
+            className={`tab-button ${activeEvent === evt.id ? 'active' : ''}`}
+            onClick={() => setActiveEvent(evt.id)}
+            aria-label={`Select event ${evt.name}`}
+          >
+            {evt.name}
+          </button>
+        ))}
+      </div>
 
       <div className="filters-row">
         {/* Result Type Toggle */}
@@ -170,85 +132,33 @@ const App = () => {
             </button>
           </div>
         </div>
-
-        {/* Stackmat vs Keyboard Toggle */}
-        <div className="toggle-container">
-          <div className="toggle-wrapper">
-            <button
-              className={`toggle-btn ${timerType === 'keyboard' ? 'selected' : ''}`}
-              onClick={() => setTimerType('keyboard')}
-            >
-              点
-            </button>
-            <button
-              className={`toggle-btn ${timerType === 'stackmat' ? 'selected' : ''}`}
-              onClick={() => setTimerType('stackmat')}
-            >
-              拍
-            </button>
-          </div>
-        </div>
       </div>
 
       {/* Content Area */}
       <div className="leaderboard-card">
-        
-        {view === 'leaderboard' ? (
-          /* LEADERBOARD TABLE */
-          <>
-            <div className="table-header">
-              <div className="col-rank">#</div>
-              <div className="col-name">Competitor</div>
-              <div className="col-method">Method</div>
-              <div className="col-result">Result</div>
-            </div>
+        <div className="table-header">
+          <div className="col-rank">#</div>
+          <div className="col-name">Competitor</div>
+          <div className="col-method">Method</div>
+          <div className="col-result">Result</div>
+        </div>
 
-            <div className="table-body">
-              {leaderboardRecords.length > 0 ? (
-                leaderboardRecords.map((record, index) => (
-                  <div className="table-row" key={`${record.eventId}-${record.type}-${index}`}>
-                    <div className="col-rank">{index + 1}</div>
-                    <div className="col-name">{record.name}</div>
-                    <div className="col-method">{record.method}</div>
-                    <div className="col-result">{formatTimeDisplay(record.result)}</div>
-                  </div>
-                ))
-              ) : (
-                <div className="empty-state">
-                  No {timerType === 'stackmat' ? 'Stackmat' : 'Keyboard'} records found for {activeEventName} ({getResultTypeLabel(resultType)}).
-                </div>
-              )}
+        <div className="table-body">
+          {leaderboardRecords.length > 0 ? (
+            leaderboardRecords.map((record, index) => (
+              <div className="table-row" key={`${record.eventId}-${record.type}-${index}`}>
+                <div className="col-rank">{index + 1}</div>
+                <div className="col-name">{record.name}</div>
+                <div className="col-method">{record.method}</div>
+                <div className="col-result">{formatTimeDisplay(record.result)}</div>
+              </div>
+            ))
+          ) : (
+            <div className="empty-state">
+              No records found for {activeEventName} ({getResultTypeLabel(resultType)}).
             </div>
-          </>
-        ) : (
-          /* GROUP RECORDS TABLE */
-          <>
-            <div className="table-header">
-              <div className="col-event">Event</div>
-              <div className="col-name">Competitor</div>
-              <div className="col-method">Method</div>
-              <div className="col-result">Result</div>
-            </div>
-
-            <div className="table-body">
-              {groupRecords.map(({ event, record }) => (
-                <div className="table-row" key={event.id}>
-                  <div className="col-event">{event.name}</div>
-                  <div className="col-name">
-                    {record ? record.name : <span className="text-muted">-</span>}
-                  </div>
-                  <div className="col-method">
-                    {record ? record.method : '-'}
-                  </div>
-                  <div className="col-result">
-                    {record ? formatTimeDisplay(record.result) : '-'}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-
+          )}
+        </div>
       </div>
     </div>
   );
