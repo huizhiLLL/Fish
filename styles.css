@@ -58,6 +58,34 @@ body {
   background-color: #fafafa;
 }
 
+/* GitHub Link (Floating Top Right) */
+.github-link {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--card-bg);
+  border: 1px solid rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  z-index: 100;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.github-link:hover {
+  color: var(--primary-color);
+  background-color: #fafafa;
+}
+
+.github-link:active {
+  transform: scale(0.92);
+}
+
 header {
   margin-bottom: 20px;
   text-align: center;
@@ -253,6 +281,17 @@ h1 {
   .table-header, .table-row {
     padding-left: 12px;
     padding-right: 12px;
+  }
+
+  /* Adjust buttons to fit on one line with the new AO12 option */
+  .filters-row {
+    gap: 8px;
+  }
+  
+  .toggle-btn {
+    padding: 6px 8px; /* Slightly tighter padding */
+    min-width: 36px; /* Allow buttons to be slightly narrower */
+    font-size: 12px;
   }
 
   .col-rank {
