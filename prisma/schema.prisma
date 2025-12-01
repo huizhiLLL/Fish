@@ -1,0 +1,38 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Event {
+  id        String              @id
+  name      String
+  records   LeaderboardRecord[]
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+}
+
+model LeaderboardRecord {
+  id        Int       @id @default(autoincrement())
+  name      String
+  result    String
+  method    String
+  eventId   String
+  type      RecordType
+  event     Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([eventId, type])
+}
+
+enum RecordType {
+  single
+  average
+  ao12
+}
+
